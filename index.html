@@ -27,10 +27,13 @@
     <!-- GLOBAL CONFIG -->
     <script>
         // --- KONFIGURASI ---
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby9g4AUZ14a0_vbAXwJob9a4lSh7bwYwUDB9ISCaiScU2PNwTOyzGNtQ8Nlt9kqayQ/exec"; // Masukkan URL Web App Google Apps Script di sini
-        const ADMIN_PIN = "1234";
+        const GOOGLE_SCRIPT_URL = ""; // Masukkan URL Web App Google Apps Script di sini
+        
+        // PIN ADMIN: Bisa huruf, angka, simbol. Tidak dibatasi jumlah karakter.
+        const ADMIN_PIN = "AdminSekolah123"; 
+        
         const MAX_VIOLATIONS = 3;
-        const API_KEY = ""; // Kunci API Gemini (kosongkan jika dijalankan di lingkungan khusus/demo)
+        const API_KEY = ""; // Kunci API Gemini (Opsional)
     </script>
 
     <!-- VIEWS CONTAINER -->
@@ -38,11 +41,8 @@
 
         <!-- 1. VIEW: WELCOME -->
         <div id="view-welcome" class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 border-t-8 border-green-600 fade-in">
-            <!-- Admin Button -->
-            <button onclick="showAdminLogin()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition" title="Admin Login">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </button>
-
+            <!-- Admin Button (Hidden trigger removed, use explicit button below) -->
+            
             <div class="text-center mb-6">
                 <div class="flex justify-center mb-4">
                     <div class="bg-green-100 p-4 rounded-full">
@@ -51,6 +51,7 @@
                 </div>
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Ujian Kewirausahaan (PKK)</h1>
                 <p class="text-gray-600 font-medium">Bidang Keahlian Otomotif & Bisnis Sepeda Motor</p>
+                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mt-2">Soal Diacak Otomatis</span>
             </div>
 
             <!-- Form Identitas -->
@@ -176,7 +177,7 @@
             <div id="ai-section" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 hidden">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="font-bold text-blue-800 flex items-center">
-                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
                         Analisis AI Tutor
                     </h3>
                     <button id="btn-ai" onclick="askAi()" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
@@ -282,8 +283,9 @@
                 Akses Admin
             </h3>
             <form onsubmit="handleAdminLogin(event)">
-                <input type="password" id="admin-pin" class="w-full border p-2 rounded mb-4 text-center text-2xl tracking-widest" placeholder="PIN" maxlength="4" autofocus>
-                <p id="admin-error" class="text-red-600 text-sm mb-4 text-center hidden">PIN Salah!</p>
+                <!-- PERUBAHAN: Input text, center align, tanpa batasan max length ketat -->
+                <input type="password" id="admin-pin" class="w-full border p-2 rounded mb-4 text-center text-xl" placeholder="Masukkan Password Admin" autofocus>
+                <p id="admin-error" class="text-red-600 text-sm mb-4 text-center hidden">Password Salah!</p>
                 <div class="flex gap-2">
                     <button type="button" onclick="closeAdminLogin()" class="flex-1 py-2 bg-gray-200 rounded text-gray-700 font-bold">Batal</button>
                     <button type="submit" class="flex-1 py-2 bg-blue-600 rounded text-white font-bold">Masuk</button>
@@ -339,13 +341,14 @@
         ];
 
         // --- STATE VARIABLES ---
+        let shuffledQuestions = []; // Container for randomized questions
         let currentQuestionIndex = 0;
         let userAnswers = {};
         let score = 0;
         let violationCount = 0;
         let userName = "";
         let userClass = "";
-        let gameState = "welcome"; // welcome, playing, finished, admin
+        let gameState = "welcome"; 
 
         // --- DOM REFERENCES ---
         const views = {
@@ -393,6 +396,16 @@
             dqCount: document.getElementById('dq-count')
         };
 
+        // --- UTILS: SHUFFLE ARRAY ---
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
         // --- NAVIGATION ---
         function switchView(viewName) {
             gameState = viewName;
@@ -417,6 +430,10 @@
             }
 
             els.inputError.classList.add('hidden');
+            
+            // RANDOMIZE QUESTIONS HERE
+            shuffledQuestions = shuffleArray(questionsData);
+
             currentQuestionIndex = 0;
             userAnswers = {};
             score = 0;
@@ -433,9 +450,11 @@
         }
 
         function renderQuestion() {
-            const q = questionsData[currentQuestionIndex];
-            els.questionCounter.textContent = `Soal ${currentQuestionIndex + 1} dari ${questionsData.length}`;
-            const percent = Math.round(((currentQuestionIndex + 1) / questionsData.length) * 100);
+            // Use shuffledQuestions instead of questionsData
+            const q = shuffledQuestions[currentQuestionIndex];
+            
+            els.questionCounter.textContent = `Soal ${currentQuestionIndex + 1} dari ${shuffledQuestions.length}`;
+            const percent = Math.round(((currentQuestionIndex + 1) / shuffledQuestions.length) * 100);
             els.progressPercentage.textContent = `${percent}% Selesai`;
             els.progressBar.style.width = `${percent}%`;
             
@@ -461,7 +480,7 @@
             els.btnPrev.disabled = currentQuestionIndex === 0;
             els.btnPrev.className = `flex items-center px-4 py-2 rounded-lg font-bold text-sm transition ${currentQuestionIndex === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 shadow-sm'}`;
 
-            if (currentQuestionIndex === questionsData.length - 1) {
+            if (currentQuestionIndex === shuffledQuestions.length - 1) {
                 els.btnNext.classList.add('hidden');
                 els.btnFinish.classList.remove('hidden');
                 els.btnFinish.classList.add('flex');
@@ -478,7 +497,7 @@
         }
 
         function nextQuestion() {
-            if (currentQuestionIndex < questionsData.length - 1) {
+            if (currentQuestionIndex < shuffledQuestions.length - 1) {
                 currentQuestionIndex++;
                 renderQuestion();
             }
@@ -497,19 +516,19 @@
                 document.exitFullscreen().catch(() => {});
             }
 
-            // Calculate Score
+            // Calculate Score based on shuffled questions
             score = 0;
-            questionsData.forEach((q, idx) => {
+            shuffledQuestions.forEach((q, idx) => {
                 if (userAnswers[idx] === q.answer) score++;
             });
 
-            const finalGrade = Math.round((score / questionsData.length) * 100);
-            const isPassed = finalGrade >= 70;
+            const finalGrade = Math.round((score / shuffledQuestions.length) * 100);
+            const isPassed = finalGrade >= 75;
 
             // Render Results
             els.resultName.textContent = userName;
             els.resultClass.textContent = userClass;
-            els.resultScore.textContent = `${score} / ${questionsData.length}`;
+            els.resultScore.textContent = `${score} / ${shuffledQuestions.length}`;
             els.resultGrade.textContent = `Nilai Akhir: ${finalGrade}`;
             els.resultGrade.className = `text-xl font-semibold ${isPassed ? 'text-green-600' : 'text-red-600'}`;
             
@@ -520,10 +539,10 @@
                 ? '<svg class="w-16 h-16 text-green-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
                 : '<svg class="w-16 h-16 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>';
 
-            // Wrong Answers Review
+            // Wrong Answers Review (Use shuffledQuestions)
             els.reviewContainer.innerHTML = '';
             let wrongCount = 0;
-            questionsData.forEach((q, idx) => {
+            shuffledQuestions.forEach((q, idx) => {
                 const ans = userAnswers[idx];
                 if (ans !== q.answer) {
                     wrongCount++;
@@ -586,8 +605,6 @@
             els.btnAi.disabled = false;
             els.btnAi.textContent = "Jelaskan Kenapa Saya Salah?";
             
-            // Remove listeners (reload easiest way to fully clean state or just flags)
-            // Ideally removeEventListener, but simple flag check is okay
             gameState = "welcome";
             switchView('welcome');
         }
@@ -602,11 +619,11 @@
             els.btnAi.disabled = true;
             els.btnAi.innerHTML = `<svg class="w-3 h-3 animate-spin inline mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Memproses...`;
 
-            // Prepare Prompt
-            const wrongQs = questionsData.filter((q, idx) => userAnswers[idx] !== q.answer).slice(0, 3);
+            // Prepare Prompt with shuffledQuestions
+            const wrongQs = shuffledQuestions.filter((q, idx) => userAnswers[idx] !== q.answer).slice(0, 3);
             const details = wrongQs.map(q => `- Soal: "${q.question}" (Jawab: ${q.options[userAnswers[q.id-1]] || '-'}, Kunci: ${q.options[q.answer]})`).join("\n");
             
-            const prompt = `Saya siswa SMK Otomotif. Nama: ${userName}. Nilai: ${Math.round((score/questionsData.length)*100)}.
+            const prompt = `Saya siswa SMK Otomotif. Nama: ${userName}. Nilai: ${Math.round((score/shuffledQuestions.length)*100)}.
             Jelaskan kenapa jawaban saya salah (santai & memotivasi):
             ${details}`;
 
@@ -651,7 +668,6 @@
         }
 
         function triggerViolation(msg) {
-            // Prevent double counting close events
             if (!els.modalViolation.classList.contains('hidden-view')) return;
 
             violationCount++;
@@ -763,8 +779,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
