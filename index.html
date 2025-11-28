@@ -194,6 +194,9 @@
                 <p class="text-sm font-semibold">Pelanggaran: <span id="dq-count">3</span></p>
                 <p class="text-xs text-gray-500 mt-1">Pindah Tab / Screenshot / Hilang Fokus / Split Screen</p>
             </div>
+            <div class="mb-4 text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                Catatan: Hasil pengerjaan terakhir Anda tetap tersimpan di sistem dengan status Diskualifikasi.
+            </div>
             <button onclick="resetApp()" class="px-6 py-2 bg-gray-600 text-white rounded text-sm">Kembali</button>
         </div>
 
@@ -998,8 +1001,74 @@
             feather.replace();
         }
 
-        function disqualifyUser() {
+        // --- UPDATE DISQUALIFY LOGIC ---
+        async function disqualifyUser() {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+            
+            // --- LOGIC TAMBAHAN: SIMPAN DATA SAAT DISKUALIFIKASI ---
+            
+            // 1. Hitung Durasi
+            const endTime = new Date();
+            const durationMs = endTime - startTime;
+            const minutes = Math.floor(durationMs / 60000);
+            const seconds = Math.floor((durationMs % 60000) / 1000);
+            const durationStr = `${minutes}m ${seconds}s`;
+
+            // 2. Hitung Skor (Berdasarkan apa yang sudah dijawab)
+            let earnedPoints = 0;
+            let totalPossiblePoints = 0; // Total poin seluruh soal (bukan cuma yang dijawab)
+            let correctCount = 0;
+
+            // Kita hitung berdasarkan seluruh soal agar nilai mencerminkan kegagalan menyelesaikan
+            shuffledQuestions.forEach((q, idx) => {
+                const points = q.points || 1;
+                totalPossiblePoints += points;
+                if (userAnswers[idx] === q.answer) {
+                    earnedPoints += points;
+                    correctCount++;
+                }
+            });
+
+            let finalGrade = 0;
+            if (totalPossiblePoints > 0) {
+                finalGrade = Math.round((earnedPoints / totalPossiblePoints) * 100);
+            }
+
+            // 3. Simpan Data
+            const resultData = {
+                nama: userName,
+                kelas: userClass,
+                paket: userPackage, 
+                skor: correctCount, 
+                nilaiAkhir: finalGrade, // Nilai apa adanya saat diskualifikasi
+                durasi: durationStr, 
+                timestamp: new Date().toISOString(),
+                status: "DISKUALIFIKASI" // Penanda khusus (opsional, tapi berguna)
+            };
+            
+            // Tambahkan penanda status di nama agar terlihat di spreadsheet jika kolom terbatas
+            const resultDataToSend = { ...resultData, nama: `${userName} (DISKUALIFIKASI)` };
+
+            // Save Local
+            const stored = JSON.parse(localStorage.getItem("quiz_results") || "[]");
+            stored.push(resultData); // Save raw data locally
+            localStorage.setItem("quiz_results", JSON.stringify(stored));
+
+            // Send to Google Sheets
+            if (GOOGLE_SCRIPT_URL) {
+                try {
+                    // Fire and forget, or wait? User is kicked out anyway.
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(resultDataToSend)
+                    });
+                } catch(e) { console.error(e); }
+            }
+            
+            // --- END LOGIC ---
+
             gameState = "disqualified";
             els.dqName.textContent = userName;
             els.dqClass.textContent = userClass;
@@ -1011,4 +1080,3 @@
     </script>
 </body>
 </html>
-
