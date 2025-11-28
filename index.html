@@ -1,0 +1,1058 @@
+import React, { useState, useEffect, useCallback } from 'react';
+
+// --- KONFIGURASI GOOGLE SHEETS ---
+// Ganti string kosong di bawah ini dengan URL Web App dari Google Apps Script Anda
+const GOOGLE_SCRIPT_URL = ""; 
+
+// --- INLINE ICONS ---
+
+const AlertTriangle = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+    <path d="M12 9v4" />
+    <path d="M12 17h.01" />
+  </svg>
+);
+
+const CheckCircle = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+);
+
+const XCircle = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="m15 9-6 6" />
+    <path d="m9 9 6 6" />
+  </svg>
+);
+
+const Play = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+
+const RefreshCcw = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M3 2v6h6" />
+    <path d="M21 12A9 9 0 0 0 6 5.3L3 8" />
+    <path d="M21 22v-6h-6" />
+    <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7" />
+  </svg>
+);
+
+const ShieldAlert = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
+  </svg>
+);
+
+const EyeOff = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+    <line x1="2" y1="2" x2="22" y2="22" />
+  </svg>
+);
+
+const Briefcase = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+  </svg>
+);
+
+const User = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const Lock = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const Users = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const LogOut = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" x2="9" y1="12" y2="12" />
+  </svg>
+);
+
+const Sparkles = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z" />
+  </svg>
+);
+
+const Bot = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 8V4H8" />
+    <rect width="16" height="12" x="4" y="8" rx="2" />
+    <path d="M2 14h2" />
+    <path d="M20 14h2" />
+    <path d="M15 13v2" />
+    <path d="M9 13v2" />
+  </svg>
+);
+
+const Loader2 = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </svg>
+);
+
+const ChevronLeft = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m15 18-6-6 6-6" />
+  </svg>
+);
+
+const ChevronRight = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
+// --- GEMINI API HELPER ---
+
+const callGemini = async (prompt) => {
+  const apiKey = ""; // Disuntikkan oleh environment
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI sedang sibuk. Coba lagi nanti.";
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return "Terjadi kesalahan saat menghubungi AI.";
+  }
+};
+
+// --- DATA SOAL ---
+
+const questionsData = [
+  {
+    id: 1,
+    question: "Sikap tidak mudah menyerah saat menghadapi kegagalan dan selalu bangkit kembali disebut...",
+    options: ["Percaya diri", "Kreatif", "Berani ambil risiko", "Pantang menyerah", "Jujur"],
+    answer: 3 // D
+  },
+  {
+    id: 2,
+    question: "Perilaku wirausahawan yang ditunjukkan dengan selalu mencari cara baru untuk menyelesaikan masalah atau menciptakan produk disebut...",
+    options: ["Disiplin", "Jujur", "Kreatif dan inovatif", "Komitmen", "Sabar"],
+    answer: 2 // C
+  },
+  {
+    id: 3,
+    question: "Mengapa sifat jujur dalam berwirausaha penting?",
+    options: ["Agar cepat terkenal", "Membuat pelanggan percaya dan setia", "Untuk bisa menipu pesaing", "Agar tidak disalahkan", "Untuk menghindari pajak"],
+    answer: 1 // B
+  },
+  {
+    id: 4,
+    question: "Seorang wirausahawan yang selalu berupaya meningkatkan kualitas layanannya demi kepuasan pelanggan disebut memiliki perilaku...",
+    options: ["Pelayanan prima", "Berorientasi pada hasil", "Mementingkan diri sendiri", "Menunggu pelanggan datang", "Bertanggung jawab"],
+    answer: 0 // A
+  },
+  {
+    id: 5,
+    question: "Pak Roni mengirim karyawannya mengikuti pelatihan servis motor listrik setelah melihat tren motor listrik meningkat. Sikap yang ditunjukkan Pak Roni adalah...",
+    options: ["Kreatif", "Mengambil risiko", "Pantang menyerah", "Berorientasi pada masa depan", "Kerja keras"],
+    answer: 3 // D
+  },
+  {
+    id: 6,
+    question: "Wirausahawan memasang target omset dan jumlah pelanggan bulanan untuk mewujudkan visinya menjadi bengkel terlengkap. Perilaku ini mencerminkan...",
+    options: ["Komitmen tinggi", "Kreativitas", "Berorientasi pada masa depan", "Bekerja keras", "Bertanggung jawab"],
+    answer: 2 // C
+  },
+  {
+    id: 7,
+    question: "Seorang pelanggan mengeluhkan hasil ganti oli yang kurang rapat sehingga oli bocor. Apa tindakan terbaik dan paling etis sebagai wirausahawan?",
+    options: ["Menyalahkan mekanik yang bertugas", "Mengabaikan keluhan pelanggan", "Berdebat dengan pelanggan", "Meminta pelanggan untuk tidak kembali", "Meminta maaf, memperbaiki, dan memastikan masalah tidak terulang"],
+    answer: 4 // E
+  },
+  {
+    id: 8,
+    question: "Anda adalah pemilik bengkel motor yang memiliki brand kuat, tetapi dikelilingi oleh banyak bengkel baru yang menawarkan harga lebih murah. Apa strategi jangka panjang yang harus Anda prioritaskan?",
+    options: [
+      "Mengurangi harga servis hingga di bawah pesaing",
+      "Meningkatkan kualitas servis, memberikan garansi, dan membangun komunitas pelanggan loyal",
+      "Mengabaikan pesaing baru dan fokus pada pelanggan lama",
+      "Melakukan promosi besar-besaran di awal bulan saja.",
+      "Menutup layanan yang paling banyak ditiru"
+    ],
+    answer: 1 // B
+  },
+  {
+    id: 9,
+    question: "Apa yang dimaksud dengan peluang usaha?",
+    options: ["Ide bisnis yang langsung menghasilkan keuntungan.", "Analisis modal yang dibutuhkan.", "Kesempatan yang datang untuk membuka bisnis baru.", "Perkiraan kerugian dalam memulai bisnis.", "Rencana pemasaran produk."],
+    answer: 2 // C
+  },
+  {
+    id: 10,
+    question: "Berikut ini yang merupakan contoh peluang usaha di bidang otomotif adalah...",
+    options: ["Warung makan.", "Jasa reparasi gadget.", "Jasa laundry.", "Bengkel sepeda motor.", "Toko kelontong."],
+    answer: 3 // D
+  },
+  {
+    id: 11,
+    question: "Apa yang menjadi dasar utama dalam menganalisis peluang usaha?",
+    options: ["Ketersediaan modal yang besar.", "Persaingan bisnis.", "Kebutuhan pasar.", "Kemampuan pribadi.", "Lokasi strategis."],
+    answer: 2 // C
+  },
+  {
+    id: 12,
+    question: "Peluang usaha dapat muncul dari masalah yang dihadapi oleh masyarakat. Contoh masalah yang menciptakan peluang adalah...",
+    options: ["Bengkel yang ramai di mana-mana.", "Suku cadang yang mudah didapat.", "Biaya servis yang mahal.", "Jarak bengkel yang jauh dan antrean yang panjang.", "Program promosi servis gratis."],
+    answer: 3 // D
+  },
+  {
+    id: 13,
+    question: "Mengapa identifikasi kebutuhan pasar sangat penting dalam menemukan peluang usaha?",
+    options: ["Supaya tahu produk apa yang akan dibuat.", "Agar usaha bisa langsung laku.", "Untuk memastikan produk yang dibuat sesuai dengan permintaan konsumen.", "Agar biaya produksi tidak terlalu tinggi.", "Untuk menentukan harga jual produk."],
+    answer: 2 // C
+  },
+  {
+    id: 14,
+    question: "Jika Anda menemukan banyak pengendara motor mengeluhkan ban bocor di jalan, peluang usaha yang dapat Anda ciptakan adalah...",
+    options: ["Jasa ganti oli panggilan.", "Penjualan helm motor.", "Membuka tempat tambal ban yang mudah dijangkau.", "Jasa perbaikan knalpot.", "Penjualan spare part mobil."],
+    answer: 2 // C
+  },
+  {
+    id: 15,
+    question: "Anda ingin membuka usaha cuci motor di daerah perumahan padat. Kompetitor sudah ada. Bagaimana cara menciptakan nilai tambah (value proposition) yang unik?",
+    options: [
+      "Menambahkan menu warung makan di lokasi cuci motor.",
+      "Memasang spanduk iklan yang lebih besar.",
+      "Memberikan layanan waterless wash dan detailing cepat yang belum dimiliki pesaing.",
+      "Menurunkan harga cuci motor jauh di bawah pesaing.",
+      "Hanya menerima pelanggan dari luar wilayah perumahan."
+    ],
+    answer: 2 // C
+  },
+  {
+    id: 16,
+    question: "Masalah: 'Pekerja kantor selalu terlambat karena antri servis pagi'. Peluang usaha paling inovatif?",
+    options: [
+      "Menjual suku cadang secara online.",
+      "Membuka bengkel di area pinggiran kota.",
+      "Menambah jumlah mekanik di bengkel yang sudah ada.",
+      "Memberi diskon besar-besaran untuk servis di malam hari.",
+      "Menciptakan jasa servis motor pick-up and drop-off atau servis panggilan di lokasi parkir kantor."
+    ],
+    answer: 4 // E
+  },
+  {
+    id: 17,
+    question: "Analisis SWOT terdiri dari empat komponen, yaitu...",
+    options: ["Strategi, Waktu, Operasi, dan Tujuan.", "Sumber daya, Wilayah, Otoritas, dan Teknis.", "Strength, Weakness, Opportunity, dan Threat.", "Sektor, Wirausaha, Orang, dan Target.", "Sistem, Wewenang, Organisasi, dan Transaksi."],
+    answer: 2 // C
+  },
+  {
+    id: 18,
+    question: "Kekuatan (Strengths) dalam analisis SWOT merujuk pada...",
+    options: ["Faktor eksternal yang menguntungkan.", "Sumber daya dan keunggulan internal perusahaan.", "Faktor eksternal yang merugikan.", "Hambatan dari pesaing.", "Kondisi pasar yang tidak menentu."],
+    answer: 1 // B
+  },
+  {
+    id: 19,
+    question: "Berikut ini yang termasuk kategori Kelemahan (Weaknesses) dalam sebuah bengkel adalah...",
+    options: ["Lokasi yang strategis.", "Banyak pesaing baru.", "Keterbatasan modal dan alat yang sudah tua.", "Tren motor listrik meningkat.", "Mekanik yang sangat ahli."],
+    answer: 2 // C
+  },
+  {
+    id: 20,
+    question: "Mengapa Threat (ancaman) dalam analisis SWOT perlu dipertimbangkan?",
+    options: ["Untuk menakut-nakuti pesaing.", "Agar tidak ada pesaing yang masuk.", "Agar bisa menyiapkan strategi untuk mengatasi masalah dari luar.", "Untuk mencari tahu kelemahan pesaing.", "Untuk mengetahui kekuatan diri sendiri."],
+    answer: 2 // C
+  },
+  {
+    id: 21,
+    question: "Peluang usaha 'Jasa Detailing Kendaraan' memiliki tingkat persaingan yang rendah di kota kecil. Faktor ini dapat dikategorikan sebagai...",
+    options: ["Strengths.", "Opportunities.", "Weaknesses.", "Threats.", "Solutions."],
+    answer: 1 // B
+  },
+  {
+    id: 22,
+    question: "Pak Budi ingin membuka bengkel di pedesaan. Ia khawatir penduduk di sana belum sadar akan pentingnya perawatan motor. Hal ini termasuk dalam...",
+    options: ["Threats.", "Strengths.", "Opportunities.", "Weaknesses.", "Solutions."],
+    answer: 0 // A
+  },
+  {
+    id: 23,
+    question: "Sebuah bengkel baru memiliki mekanik ahli (Strength), tetapi kesulitan bersaing karena bengkel lama punya pelanggan loyal (Threat). Strategi?",
+    options: [
+      "Mengurangi harga servis secara drastis.",
+      "Mempromosikan keahlian mekanik dengan memberikan servis yang lebih berkualitas dan personal.",
+      "Menambah modal usaha.",
+      "Mengubah lokasi bengkel.",
+      "Menambah layanan yang tidak berhubungan dengan otomotif."
+    ],
+    answer: 1 // B
+  },
+  {
+    id: 24,
+    question: "Lokasi strategis (Opportunity), tetapi biaya sewa tinggi (Weakness). Strategi prioritas?",
+    options: [
+      "Pindah ke lokasi yang lebih murah walau kurang strategis.",
+      "Menurunkan kualitas layanan.",
+      "Mengevaluasi dan memanfaatkan lokasi strategis secara maksimal dengan menambah jam operasional dan layanan premium.",
+      "Membiarkan biaya sewa tinggi.",
+      "Mencari investor baru."
+    ],
+    answer: 2 // C
+  },
+  {
+    id: 25,
+    question: "Apa yang dimaksud dengan biaya produksi?",
+    options: ["Biaya promosi.", "Biaya gaji karyawan.", "Biaya sewa tempat.", "Biaya yang dikeluarkan untuk menghasilkan barang atau jasa.", "Biaya transportasi."],
+    answer: 3 // D
+  },
+  {
+    id: 26,
+    question: "Biaya yang jumlahnya tetap, tidak berubah meskipun jumlah produksi naik atau turun, disebut...",
+    options: ["Biaya variabel.", "Biaya tetap.", "Biaya total.", "Biaya operasional.", "Biaya non-produksi."],
+    answer: 1 // B
+  },
+  {
+    id: 27,
+    question: "Biaya variabel adalah biaya yang...",
+    options: ["Jumlahnya tetap setiap bulan.", "Hanya dikeluarkan di awal usaha.", "Berubah seiring dengan perubahan volume produksi.", "Tidak berhubungan dengan produksi.", "Tidak bisa dihitung."],
+    answer: 2 // C
+  },
+  {
+    id: 28,
+    question: "Titik di mana total pendapatan sama dengan total biaya, sehingga tidak terjadi keuntungan maupun kerugian, disebut...",
+    options: ["Titik keuntungan.", "Titik kerugian.", "Break-Even Point (BEP).", "Margin keuntungan.", "Titik impas."],
+    answer: 2 // C
+  },
+  {
+    id: 29,
+    question: "Tujuan menghitung BEP adalah untuk...",
+    options: ["Menentukan harga jual produk.", "Mengatur strategi pemasaran.", "Mengetahui jumlah minimal produk yang harus dijual agar tidak rugi.", "Mengetahui besarnya keuntungan.", "Menghitung pajak yang harus dibayar."],
+    answer: 2 // C
+  },
+  {
+    id: 30,
+    question: "Jika sebuah bengkel memproduksi suku cadang dan terjadi peningkatan biaya bahan baku, maka...",
+    options: ["Biaya variabel akan naik.", "Biaya tetap akan naik.", "Biaya variabel akan turun.", "Biaya tetap akan turun.", "BEP akan turun."],
+    answer: 0 // A
+  },
+  {
+    id: 31,
+    question: "FC Rp 5.000.000. VC per servis Rp 50.000. Harga Jual Rp 100.000. Berapa unit servis minimal untuk BEP?",
+    options: ["50 unit.", "100 unit.", "500 unit.", "1.000 unit.", "10.000 unit."],
+    answer: 1 // B
+  },
+  {
+    id: 32,
+    question: "FC Rp 10.000.000, VC Rp 20.000, P Rp 50.000. Jual 400 unit. Untung atau Rugi?",
+    options: ["Rugi Rp 2.000.000.", "Impas (BEP).", "Rugi Rp 5.000.000.", "Untung Rp 5.000.000.", "Untung Rp 2.000.000."],
+    answer: 4 // E
+  },
+  {
+    id: 33,
+    question: "Dalam Marketing Mix 4P, elemen yang berfokus pada manfaat, kualitas, desain, dan packaging adalah...",
+    options: ["Price.", "Product.", "Place.", "Promotion.", "People."],
+    answer: 1 // B
+  },
+  {
+    id: 34,
+    question: "Strategi penentuan lokasi bengkel yang mudah diakses dan dekat dengan target pasar termasuk dalam elemen 4P...",
+    options: ["Product.", "Price.", "Place.", "Promotion.", "Process."],
+    answer: 2 // C
+  },
+  {
+    id: 35,
+    question: "Kegiatan seperti iklan, diskon, endorsement, dan promosi penjualan adalah bagian dari elemen 4P...",
+    options: ["Promotion.", "Product.", "Price.", "Place.", "People."],
+    answer: 0 // A
+  },
+  {
+    id: 36,
+    question: "Elemen 4P yang berkaitan dengan kebijakan penetapan harga, potongan harga, dan syarat pembayaran adalah...",
+    options: ["Product.", "Place.", "Promotion.", "Price.", "Packaging."],
+    answer: 3 // D
+  },
+  {
+    id: 37,
+    question: "Strategi penetration pricing (harga rendah di awal). Tujuan utamanya adalah...",
+    options: ["Memaksimalkan keuntungan jangka pendek.", "Menciptakan kesan produk premium.", "Mendapatkan pangsa pasar yang besar dengan cepat.", "Menghindari kerugian di awal.", "Mempersulit kompetitor menaikkan harga."],
+    answer: 2 // C
+  },
+  {
+    id: 38,
+    question: "Produk oli ramah lingkungan (Product). Strategi Promotion yang paling tepat?",
+    options: ["Menyebar brosur harga murah.", "Melakukan edukasi mendalam via medsos tentang manfaat lingkungan.", "Iklan di pasar tradisional.", "Menjual harga mahal.", "Fokus diskon spare part lain."],
+    answer: 1 // B
+  },
+  {
+    id: 39,
+    question: "Bengkel A harga 20% lebih tinggi dari B. Agar pelanggan tetap memilih A, strategi Product/Place apa yang harus ditingkatkan?",
+    options: ["Menambah diskon servis.", "Mempercantik ruang tunggu (Place) dan garansi servis (Product).", "Menutup cabang B.", "Mengubah harga.", "Mengurangi mekanik."],
+    answer: 1 // B
+  },
+  {
+    id: 40,
+    question: "Target pasar: anak muda modifikasi motor (Knalpot Racing Premium). Strategi Promotion efektif?",
+    options: ["Iklan koran lokal.", "Stand pameran mobil tua.", "Diskon servis rutin.", "Mensponsori event balap motor resmi dan kolaborasi influencer otomotif.", "Voucher cuci motor."],
+    answer: 3 // D
+  }
+];
+
+const MAX_VIOLATIONS = 3;
+
+// --- KOMPONEN ADMIN ---
+
+const AdminLogin = ({ onLogin, onCancel }) => {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (pin === "1234") { // PIN Default
+      onLogin();
+    } else {
+      setError("PIN Salah!");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <Lock className="w-5 h-5 mr-2 text-gray-600" />
+          Akses Admin
+        </h3>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            className="w-full border p-2 rounded mb-4 text-center text-2xl tracking-widest"
+            placeholder="PIN"
+            maxLength={4}
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            autoFocus
+          />
+          {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+          <div className="flex gap-2">
+            <button type="button" onClick={onCancel} className="flex-1 py-2 bg-gray-200 rounded text-gray-700 font-bold">Batal</button>
+            <button type="submit" className="flex-1 py-2 bg-blue-600 rounded text-white font-bold">Masuk</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const AdminDashboard = ({ onLogout }) => {
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    const storedData = JSON.parse(localStorage.getItem("quiz_results") || "[]");
+    setResults(storedData.reverse());
+  }, []);
+
+  const downloadCSV = () => {
+    const headers = "Tanggal,Nama,Kelas,Skor Benar,Nilai Akhir\n";
+    const rows = results.map(r => 
+      `${new Date(r.timestamp).toLocaleString()},"${r.nama}","${r.kelas}",${r.skor},${r.nilaiAkhir}`
+    ).join("\n");
+    
+    const blob = new Blob([headers + rows], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "Hasil_Ujian.csv";
+    a.click();
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-6 font-sans">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+            <Briefcase className="w-8 h-8 mr-3 text-blue-600" />
+            Dashboard Admin
+          </h1>
+          <button onClick={onLogout} className="flex items-center text-red-600 font-bold hover:bg-red-50 px-4 py-2 rounded">
+            <LogOut className="w-5 h-5 mr-2" /> Keluar
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6 overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-700 flex items-center">
+              <Users className="w-5 h-5 mr-2" />
+              Progress Peserta Didik
+            </h2>
+            <div className="space-x-2">
+                 <button onClick={downloadCSV} className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                    Download CSV
+                 </button>
+                 <span className="text-xs text-gray-400 block mt-1 text-right">Total: {results.length} Siswa</span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+                  <th className="p-3 border-b">Waktu</th>
+                  <th className="p-3 border-b">Nama Lengkap</th>
+                  <th className="p-3 border-b">Kelas</th>
+                  <th className="p-3 border-b text-center">Skor Benar</th>
+                  <th className="p-3 border-b text-center">Nilai Akhir (0-100)</th>
+                  <th className="p-3 border-b text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm text-gray-700">
+                {results.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-8 text-center text-gray-400 italic">Belum ada data pengerjaan.</td>
+                  </tr>
+                ) : (
+                  results.map((r, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 border-b last:border-0">
+                      <td className="p-3">{new Date(r.timestamp).toLocaleString()}</td>
+                      <td className="p-3 font-medium text-gray-900">{r.nama}</td>
+                      <td className="p-3"><span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{r.kelas}</span></td>
+                      <td className="p-3 text-center">{r.skor} / {questionsData.length}</td>
+                      <td className="p-3 text-center font-bold text-lg">
+                        <span className={r.nilaiAkhir >= 75 ? "text-green-600" : "text-red-600"}>
+                          {r.nilaiAkhir}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {r.nilaiAkhir >= 75 ? (
+                          <span className="text-green-600 flex justify-center items-center"><CheckCircle className="w-4 h-4 mr-1"/> Lulus</span>
+                        ) : (
+                          <span className="text-red-600 flex justify-center items-center"><XCircle className="w-4 h-4 mr-1"/> Remidi</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- APP UTAMA ---
+
+export default function QuizKewirausahaanApp() {
+  const [gameState, setGameState] = useState('welcome'); 
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [score, setScore] = useState(0);
+  const [violationCount, setViolationCount] = useState(0);
+  const [showViolationModal, setShowViolationModal] = useState(false);
+  const [violationMessage, setViolationMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // -- STATE UNTUK IDENTITAS SISWA --
+  const [userName, setUserName] = useState("");
+  const [userClass, setUserClass] = useState("");
+  const [inputError, setInputError] = useState("");
+
+  // --- LOGIKA KEAMANAN (ANTI-CHEAT) ---
+  const handleViolation = useCallback((type) => {
+    if (gameState !== 'playing') return;
+
+    let message = "";
+    if (type === 'blur') message = "Anda terdeteksi keluar dari halaman ujian atau membuka aplikasi lain.";
+    if (type === 'screenshot') message = "Terdeteksi upaya pengambilan tangkapan layar (Screenshot).";
+
+    setViolationCount(prev => {
+      const newCount = prev + 1;
+      setViolationMessage(`${message} Peringatan ${newCount} dari ${MAX_VIOLATIONS}.`);
+      setShowViolationModal(true);
+      
+      if (newCount >= MAX_VIOLATIONS) {
+        setGameState('disqualified');
+        setShowViolationModal(false);
+      }
+      return newCount;
+    });
+  }, [gameState]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => { if (document.hidden) handleViolation('blur'); };
+    const handleWindowBlur = () => { handleViolation('blur'); };
+    const handleKeyDown = (e) => {
+      if (e.key === 'PrintScreen') { e.preventDefault(); handleViolation('screenshot'); }
+      if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); handleViolation('screenshot'); }
+    };
+    const handleContextMenu = (e) => e.preventDefault();
+
+    if (gameState === 'playing') {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("blur", handleWindowBlur);
+      window.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("contextmenu", handleContextMenu);
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, [gameState, handleViolation]);
+
+  // --- LOGIKA QUIZ & HANDLER ---
+
+  const handleStartQuiz = () => {
+    if (!userName.trim()) { setInputError("Harap isi Nama Lengkap Anda."); return; }
+    if (!userClass) { setInputError("Harap pilih Kelas Anda."); return; }
+
+    setInputError("");
+    setGameState('playing');
+    setScore(0);
+    setCurrentQuestionIndex(0);
+    setUserAnswers({});
+    setViolationCount(0);
+    
+    try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); } catch(e) {}
+  };
+
+  const handleAnswerClick = (optionIndex) => {
+    // Hanya simpan jawaban, tidak langsung pindah soal
+    setUserAnswers(prev => ({ ...prev, [currentQuestionIndex]: optionIndex }));
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questionsData.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const handleFinishQuiz = () => {
+    // Hitung skor saat selesai
+    let finalScore = 0;
+    questionsData.forEach((q, index) => {
+      if (userAnswers[index] === q.answer) {
+        finalScore += 1;
+      }
+    });
+    setScore(finalScore);
+    finishQuiz(finalScore);
+  };
+
+  const submitToGoogleSheets = async (dataPayload) => {
+    if (!GOOGLE_SCRIPT_URL) return;
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataPayload)
+        });
+        console.log("Data sent to Google Sheets");
+    } catch (error) {
+        console.error("Gagal mengirim ke Google Sheets", error);
+    }
+  };
+
+  const finishQuiz = (finalScore) => {
+    setGameState('finished');
+    setIsSubmitting(true);
+    
+    const nilaiAkhir = Math.round((finalScore / questionsData.length) * 100);
+
+    const resultData = {
+      nama: userName,
+      kelas: userClass,
+      skor: finalScore,
+      nilaiAkhir: nilaiAkhir,
+      timestamp: new Date().toISOString()
+    };
+
+    const existingData = JSON.parse(localStorage.getItem("quiz_results") || "[]");
+    localStorage.setItem("quiz_results", JSON.stringify([...existingData, resultData]));
+
+    submitToGoogleSheets(resultData).finally(() => setIsSubmitting(false));
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  // --- AI FEATURES ---
+  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const askAiTutor = async () => {
+    setIsAiLoading(true);
+    const wrongAnswers = questionsData.filter((q, idx) => userAnswers[idx] !== q.answer);
+    
+    const sampleWrongs = wrongAnswers.slice(0, 3).map(q => 
+        `- Soal: "${q.question}" (Jawaban Siswa: ${q.options[userAnswers[q.id-1]] || "Tidak dijawab"}, Kunci: ${q.options[q.answer]})`
+    ).join("\n");
+
+    const prompt = `Saya siswa SMK jurusan Otomotif. Saya baru saja mengerjakan ujian Kewirausahaan.
+    Nama saya: ${userName}. Nilai saya: ${Math.round((score/questionsData.length)*100)}.
+    
+    Tolong berikan penjelasan singkat dan ramah kenapa jawaban saya salah pada soal berikut:
+    ${sampleWrongs}
+    
+    Berikan juga 1 tips motivasi semangat belajar kewirausahaan otomotif. Gunakan Bahasa Indonesia yang gaul tapi sopan.`;
+
+    const response = await callGemini(prompt);
+    setAiAnalysis(response);
+    setIsAiLoading(false);
+  };
+
+  // --- RENDER COMPONENTS ---
+
+  const ProgressBar = () => (
+    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+      <div 
+        className="bg-green-600 h-2.5 rounded-full transition-all duration-300" 
+        style={{ width: `${((currentQuestionIndex + 1) / questionsData.length) * 100}%` }}
+      ></div>
+    </div>
+  );
+
+  if (gameState === 'admin') {
+    return <AdminDashboard onLogout={() => setGameState('welcome')} />;
+  }
+
+  if (gameState === 'welcome') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans text-gray-800 relative">
+        {showAdminLogin && (
+            <AdminLogin 
+                onLogin={() => { setShowAdminLogin(false); setGameState('admin'); }} 
+                onCancel={() => setShowAdminLogin(false)} 
+            />
+        )}
+
+        <div className="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8 border-t-8 border-green-600">
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-4">
+                <div className="bg-green-100 p-4 rounded-full">
+                    <Briefcase className="w-10 h-10 text-green-600" />
+                </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Ujian Kewirausahaan (PKK)</h1>
+            <p className="text-gray-600 font-medium">Bidang Keahlian Otomotif & Bisnis Sepeda Motor</p>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+            <h3 className="font-bold text-gray-700 mb-4 flex items-center">
+              <User className="w-5 h-5 mr-2" />
+              Identitas Peserta
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                <input 
+                  type="text" 
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  placeholder="Masukkan Nama Lengkap Sesuai Absen"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                <select 
+                  value={userClass}
+                  onChange={(e) => setUserClass(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white"
+                >
+                  <option value="">-- Pilih Kelas --</option>
+                  <option value="XI TBSM 1">XI TBSM 1</option>
+                  <option value="XI TBSM 2">XI TBSM 2</option>
+                </select>
+              </div>
+
+              {inputError && (
+                <div className="text-red-600 text-sm font-semibold animate-pulse">
+                  {inputError}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div className="flex items-center mb-2">
+              <ShieldAlert className="w-6 h-6 text-yellow-600 mr-2" />
+              <h3 className="font-bold text-yellow-700">Peraturan & Keamanan</h3>
+            </div>
+            <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
+              <li>Dilarang pindah tab/aplikasi (Auto-Detect).</li>
+              <li>Dilarang screenshot.</li>
+              <li><strong>Maksimal pelanggaran: {MAX_VIOLATIONS} kali</strong> (Diskualifikasi).</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+              <button 
+                onClick={handleStartQuiz}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition transform active:scale-95 flex items-center justify-center"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Mulai Ujian
+              </button>
+
+              {/* TOMBOL ADMIN YANG JELAS */}
+              <button 
+                onClick={() => setShowAdminLogin(true)}
+                className="w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition flex items-center justify-center text-sm"
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Masuk sebagai Admin
+              </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'disqualified') {
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border-t-8 border-red-600">
+          <EyeOff className="w-16 h-16 text-red-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-800 mb-2">DISKUALIFIKASI</h2>
+          <div className="mb-6">
+            <p className="font-semibold text-lg">{userName}</p>
+            <p className="text-gray-500">{userClass}</p>
+          </div>
+          <p className="text-gray-700 mb-6">
+            Sistem mendeteksi aktivitas mencurigakan yang berlebihan. Ujian dihentikan otomatis.
+          </p>
+          <div className="bg-gray-100 p-4 rounded-lg mb-6">
+            <p className="text-sm font-semibold">Pelanggaran: {violationCount}</p>
+            <p className="text-xs text-gray-500 mt-1">Pindah Tab / Screenshot / Hilang Fokus</p>
+          </div>
+          <button onClick={() => setGameState('welcome')} className="px-6 py-2 bg-gray-600 text-white rounded text-sm">Kembali</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'finished') {
+    const percentage = Math.round((score / questionsData.length) * 100);
+    const passed = percentage >= 75;
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+        <div className="max-w-3xl w-full bg-white rounded-xl shadow-lg p-8">
+          <div className="text-center mb-8 border-b pb-6">
+            {passed ? <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" /> : <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />}
+            
+            <h2 className="text-3xl font-bold mb-2">Hasil Ujian</h2>
+            
+            <div className="inline-block bg-gray-100 px-6 py-2 rounded-lg mb-4">
+              <p className="text-lg font-bold text-gray-800">{userName}</p>
+              <p className="text-green-700 font-semibold">{userClass}</p>
+            </div>
+
+            <div className="text-5xl font-extrabold text-gray-900 mb-2">{score} / {questionsData.length}</div>
+            <p className={`text-xl font-semibold ${passed ? 'text-green-600' : 'text-red-600'}`}>Nilai Akhir: {percentage}</p>
+            
+            {isSubmitting && <p className="text-xs text-blue-500 animate-pulse mt-2">Mengirim data ke server...</p>}
+            
+            <p className="text-gray-500 mt-2">{passed ? "Selamat! Anda Kompeten." : "Belum Kompeten. Silakan belajar lagi."}</p>
+          </div>
+
+          {/* AI SECTION */}
+          {!passed && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+               <div className="flex items-center justify-between mb-2">
+                 <h3 className="font-bold text-blue-800 flex items-center"><Sparkles className="w-4 h-4 mr-2"/> Analisis AI Tutor</h3>
+                 {!aiAnalysis && (
+                   <button onClick={askAiTutor} disabled={isAiLoading} className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50">
+                     {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Jelaskan Kenapa Saya Salah?"}
+                   </button>
+                 )}
+               </div>
+               {aiAnalysis && (
+                 <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed mt-2 bg-white p-3 rounded border border-blue-100">
+                    <Bot className="w-5 h-5 text-blue-500 mb-1" />
+                    {aiAnalysis}
+                 </div>
+               )}
+            </div>
+          )}
+
+          <div className="pt-2">
+            <h3 className="font-bold text-gray-700 mb-4">Review Jawaban Salah:</h3>
+            <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              {questionsData.map((q, idx) => {
+                const userAnswer = userAnswers[idx];
+                if (userAnswer === q.answer) return null;
+                return (
+                  <div key={q.id} className="bg-red-50 p-4 rounded border border-red-100 text-sm">
+                    <p className="font-semibold text-gray-800 mb-1">{idx + 1}. {q.question}</p>
+                    <p className="text-red-600"><span className="font-bold">Jawaban Anda:</span> {q.options[userAnswer] || "Tidak dijawab"}</p>
+                    <p className="text-green-700"><span className="font-bold">Kunci Jawaban:</span> {q.options[q.answer]}</p>
+                  </div>
+                )
+              })}
+              {score === questionsData.length && <p className="text-center text-gray-500 italic">Sempurna! Tidak ada jawaban salah.</p>}
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button onClick={() => setGameState('welcome')} className="px-8 py-3 bg-green-600 text-white rounded-lg font-bold flex items-center justify-center mx-auto hover:bg-green-700">
+              <RefreshCcw className="w-4 h-4 mr-2" /> Kembali ke Awal
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // GAME STATE: PLAYING
+  const currentQ = questionsData[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questionsData.length - 1;
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center pt-10 p-4 font-sans select-none">
+      {showViolationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-2xl animate-bounce-in">
+            <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Peringatan Keamanan!</h3>
+            <p className="text-gray-700 mb-4">{violationMessage}</p>
+            <button onClick={() => setShowViolationModal(false)} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded transition">Saya Mengerti</button>
+          </div>
+        </div>
+      )}
+
+      <div className="w-full max-w-3xl flex justify-between items-center mb-4 text-gray-600 font-semibold text-sm">
+        <div>
+          <span className="block text-xs text-gray-400">Peserta</span>
+          {userName} ({userClass})
+        </div>
+        <div className={`flex items-center ${violationCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+          <ShieldAlert className="w-4 h-4 mr-1" />
+          Status: {violationCount === 0 ? "Aman" : `Peringatan ${violationCount}/${MAX_VIOLATIONS}`}
+        </div>
+      </div>
+
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-full md:h-auto">
+        <div className="bg-green-600 h-2 w-full"></div>
+        <div className="p-8 pb-4">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <span>Soal {currentQuestionIndex + 1} dari {questionsData.length}</span>
+            <span>{Math.round(((currentQuestionIndex + 1) / questionsData.length) * 100)}% Selesai</span>
+          </div>
+          <ProgressBar />
+          
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-8 leading-relaxed">
+            {currentQ.question}
+          </h2>
+
+          <div className="space-y-3 mb-8">
+            {currentQ.options.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleAnswerClick(idx)}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 group flex items-start
+                  ${userAnswers[currentQuestionIndex] === idx 
+                    ? 'border-green-600 bg-green-50 ring-2 ring-green-100' 
+                    : 'border-gray-200 hover:border-green-500 hover:bg-green-50'}
+                `}
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 shrink-0 transition-colors
+                  ${userAnswers[currentQuestionIndex] === idx 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-100 text-gray-500 group-hover:bg-green-500 group-hover:text-white'}
+                `}>
+                  {String.fromCharCode(65 + idx)}
+                </div>
+                <span className={`font-medium ${userAnswers[currentQuestionIndex] === idx ? 'text-green-900' : 'text-gray-700 group-hover:text-green-900'}`}>
+                  {option}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* NAVIGATION BUTTONS */}
+        <div className="bg-gray-50 p-6 border-t border-gray-100 flex justify-between items-center">
+            <button 
+              onClick={handlePrevQuestion}
+              disabled={currentQuestionIndex === 0}
+              className={`flex items-center px-4 py-2 rounded-lg font-bold text-sm transition
+                ${currentQuestionIndex === 0 
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 shadow-sm'}
+              `}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Sebelumnya
+            </button>
+
+            {isLastQuestion ? (
+              <button 
+                onClick={handleFinishQuiz}
+                className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700 shadow-md transition transform active:scale-95"
+              >
+                Selesai & Kumpulkan
+                <CheckCircle className="w-4 h-4 ml-2" />
+              </button>
+            ) : (
+              <button 
+                onClick={handleNextQuestion}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 shadow-md transition"
+              >
+                Selanjutnya
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </button>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+}
