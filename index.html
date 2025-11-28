@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ujian Kewirausahaan (PKK)</title>
+    <title>Ujian Kewirausahaan (PKK) - Anti Cheat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
@@ -22,7 +22,6 @@
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
 
     <script>
-        // --- KONFIGURASI ---
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby9g4AUZ14a0_vbAXwJob9a4lSh7bwYwUDB9ISCaiScU2PNwTOyzGNtQ8Nlt9kqayQ/exec"; 
         const ADMIN_PIN = "AdminSekolah123"; 
         const MAX_VIOLATIONS = 3;
@@ -96,6 +95,7 @@
 
         <!-- 2. VIEW: PLAYING -->
         <div id="view-playing" class="w-full max-w-3xl hidden-view flex-col h-full md:h-auto fade-in">
+            <!-- Header Info -->
             <div class="flex justify-between items-center mb-4 text-gray-600 font-semibold text-sm">
                 <div>
                     <span class="block text-xs text-gray-400">Peserta</span>
@@ -393,6 +393,14 @@
 
         const els = {
             inputNama: document.getElementById('input-nama'), inputKelas: document.getElementById('input-kelas'), inputError: document.getElementById('input-error'), displayIdentity: document.getElementById('display-identity'), violationStatus: document.getElementById('violation-status'), questionCounter: document.getElementById('question-counter'), progressPercentage: document.getElementById('progress-percentage'), progressBar: document.getElementById('progress-bar'), questionText: document.getElementById('question-text'), optionsContainer: document.getElementById('options-container'), btnPrev: document.getElementById('btn-prev'), btnNext: document.getElementById('btn-next'), btnFinish: document.getElementById('btn-finish'), modalViolation: document.getElementById('modal-violation'), violationMsg: document.getElementById('violation-msg'), modalAdminLogin: document.getElementById('modal-admin-login'), adminPinInput: document.getElementById('admin-pin'), adminError: document.getElementById('admin-error'), resultName: document.getElementById('res-nama'), resultClass: document.getElementById('res-kelas'), resultPaket: document.getElementById('res-paket'), resultDuration: document.getElementById('res-duration'), resultScore: document.getElementById('res-score'), resultGrade: document.getElementById('res-final-grade'), resultStatus: document.getElementById('res-status'), resultIcon: document.getElementById('result-icon'), submissionStatus: document.getElementById('submission-status'), reviewContainer: document.getElementById('review-container'), adminTableBody: document.getElementById('admin-table-body'), adminTotalStudents: document.getElementById('admin-total-students'), loadingIndicator: document.getElementById('loading-indicator'), aiSection: document.getElementById('ai-section'), aiContent: document.getElementById('ai-content'), btnAi: document.getElementById('btn-ai'), dqName: document.getElementById('dq-nama'), dqClass: document.getElementById('dq-kelas'), dqCount: document.getElementById('dq-count'), adminContentResults: document.getElementById('admin-content-results'), adminContentQuestions: document.getElementById('admin-content-questions'), tabResults: document.getElementById('tab-results'), tabQuestions: document.getElementById('tab-questions'), questionsListContainer: document.getElementById('questions-list-container'), totalQuestionsCount: document.getElementById('total-questions-count'), modalQuestionEditor: document.getElementById('modal-question-editor'), editorModalTitle: document.getElementById('editor-modal-title'), editQText: document.getElementById('edit-q-text'), editQPoints: document.getElementById('edit-q-points'), editOptionsList: document.getElementById('edit-options-list')
+        };
+
+        const views = {
+            welcome: document.getElementById('view-welcome'),
+            playing: document.getElementById('view-playing'),
+            finished: document.getElementById('view-finished'),
+            disqualified: document.getElementById('view-disqualified'),
+            admin: document.getElementById('view-admin')
         };
 
         function shuffleArray(array) { let shuffled = [...array]; for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; } return shuffled; }
