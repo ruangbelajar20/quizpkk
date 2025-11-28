@@ -22,6 +22,7 @@
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
 
     <script>
+        // --- KONFIGURASI ---
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby9g4AUZ14a0_vbAXwJob9a4lSh7bwYwUDB9ISCaiScU2PNwTOyzGNtQ8Nlt9kqayQ/exec"; 
         const ADMIN_PIN = "AdminSekolah123"; 
         const MAX_VIOLATIONS = 3;
@@ -95,7 +96,6 @@
 
         <!-- 2. VIEW: PLAYING -->
         <div id="view-playing" class="w-full max-w-3xl hidden-view flex-col h-full md:h-auto fade-in">
-            <!-- Header Info -->
             <div class="flex justify-between items-center mb-4 text-gray-600 font-semibold text-sm">
                 <div>
                     <span class="block text-xs text-gray-400">Peserta</span>
@@ -128,7 +128,6 @@
                     <button id="btn-next" onclick="nextQuestion()" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 shadow-md transition">
                         Selanjutnya <i data-feather="chevron-right" class="w-4 h-4 ml-1"></i>
                     </button>
-                    <!-- FIX: Added ID for disabling later -->
                     <button id="btn-finish" onclick="finishQuiz()" class="hidden flex items-center px-6 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700 shadow-md transition transform active:scale-95">
                         <span id="btn-finish-text">Selesai & Kumpulkan</span>
                         <i data-feather="check-circle" class="w-4 h-4 ml-2"></i>
@@ -156,7 +155,7 @@
                 <p id="submission-status" class="text-xs text-blue-500 mt-2 hidden animate-pulse">Mengirim data ke server...</p>
             </div>
 
-            <!-- AI & Review Section (Same as before) -->
+            <!-- AI & Review Section -->
             <div id="ai-section" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 hidden">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="font-bold text-blue-800 flex items-center">
@@ -198,7 +197,7 @@
             <button onclick="resetApp()" class="px-6 py-2 bg-gray-600 text-white rounded text-sm">Kembali</button>
         </div>
 
-        <!-- 5. VIEW: ADMIN DASHBOARD (Same as before) -->
+        <!-- 5. VIEW: ADMIN DASHBOARD -->
         <div id="view-admin" class="w-full max-w-6xl hidden-view fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold text-gray-800 flex items-center">
@@ -261,7 +260,7 @@
 
     </div>
 
-    <!-- MODAL ETC (Violation, Login, Editor) -->
+    <!-- MODAL ETC -->
     <div id="modal-violation" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4 hidden-view">
         <div class="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-2xl animate-bounce">
             <i data-feather="alert-triangle" class="w-12 h-12 text-yellow-500 mx-auto mb-3"></i>
@@ -302,10 +301,10 @@
         if (typeof feather !== 'undefined') {
             feather.replace();
         } else {
-            console.error("Feather Icons failed to load. Please check your internet connection.");
+            console.error("Feather Icons failed to load.");
         }
 
-        // --- DATA SOAL DEFAULT ---
+        // --- DATA SOAL DEFAULT (LENGKAP 40 SOAL) ---
         const defaultQuestions = [
             { id: 1, question: "Sikap tidak mudah menyerah saat menghadapi kegagalan dan selalu bangkit kembali disebut...", options: ["Percaya diri", "Kreatif", "Berani ambil risiko", "Pantang menyerah", "Jujur"], answer: 3, points: 2.5 },
             { id: 2, question: "Perilaku wirausahawan yang ditunjukkan dengan selalu mencari cara baru untuk menyelesaikan masalah atau menciptakan produk disebut...", options: ["Disiplin", "Jujur", "Kreatif dan inovatif", "Komitmen", "Sabar"], answer: 2, points: 2.5 },
@@ -360,19 +359,15 @@
         let gameState = "welcome"; 
         let editingQuestionId = null; 
         let startTime = null; 
-        let isSubmitting = false; // FIX: Flag to prevent double submit
+        let isSubmitting = false; 
 
         function initData() {
-            // FIX: Added try-catch for localStorage parsing to prevent crash
             try {
                 const stored = localStorage.getItem('quiz_questions_v2');
                 if (stored) {
                     let parsed = JSON.parse(stored);
-                    // FIX: Anti-Cheat Logic: If questions are deleted (< 10), restore default
                     if (Array.isArray(parsed) && parsed.length < 10) {
                         console.warn("Detected corrupted/modified question data. Resetting to default.");
-                        // Optional alert removed to be less intrusive, or keep if preferred:
-                        // alert("Terdeteksi jumlah soal tidak wajar. Soal akan di-reset ke default.");
                         questionsData = JSON.parse(JSON.stringify(defaultQuestions));
                         saveQuestionsToLS();
                     } else if (Array.isArray(parsed)) {
@@ -386,7 +381,6 @@
                 }
             } catch (e) {
                 console.error("Error initializing data:", e);
-                // Fallback to default if anything goes wrong
                 questionsData = JSON.parse(JSON.stringify(defaultQuestions));
                 saveQuestionsToLS();
             }
@@ -397,35 +391,29 @@
             localStorage.setItem('quiz_questions_v2', JSON.stringify(questionsData));
         }
 
-        // --- DOM REFERENCES (Same) ---
         const els = {
             inputNama: document.getElementById('input-nama'), inputKelas: document.getElementById('input-kelas'), inputError: document.getElementById('input-error'), displayIdentity: document.getElementById('display-identity'), violationStatus: document.getElementById('violation-status'), questionCounter: document.getElementById('question-counter'), progressPercentage: document.getElementById('progress-percentage'), progressBar: document.getElementById('progress-bar'), questionText: document.getElementById('question-text'), optionsContainer: document.getElementById('options-container'), btnPrev: document.getElementById('btn-prev'), btnNext: document.getElementById('btn-next'), btnFinish: document.getElementById('btn-finish'), modalViolation: document.getElementById('modal-violation'), violationMsg: document.getElementById('violation-msg'), modalAdminLogin: document.getElementById('modal-admin-login'), adminPinInput: document.getElementById('admin-pin'), adminError: document.getElementById('admin-error'), resultName: document.getElementById('res-nama'), resultClass: document.getElementById('res-kelas'), resultPaket: document.getElementById('res-paket'), resultDuration: document.getElementById('res-duration'), resultScore: document.getElementById('res-score'), resultGrade: document.getElementById('res-final-grade'), resultStatus: document.getElementById('res-status'), resultIcon: document.getElementById('result-icon'), submissionStatus: document.getElementById('submission-status'), reviewContainer: document.getElementById('review-container'), adminTableBody: document.getElementById('admin-table-body'), adminTotalStudents: document.getElementById('admin-total-students'), loadingIndicator: document.getElementById('loading-indicator'), aiSection: document.getElementById('ai-section'), aiContent: document.getElementById('ai-content'), btnAi: document.getElementById('btn-ai'), dqName: document.getElementById('dq-nama'), dqClass: document.getElementById('dq-kelas'), dqCount: document.getElementById('dq-count'), adminContentResults: document.getElementById('admin-content-results'), adminContentQuestions: document.getElementById('admin-content-questions'), tabResults: document.getElementById('tab-results'), tabQuestions: document.getElementById('tab-questions'), questionsListContainer: document.getElementById('questions-list-container'), totalQuestionsCount: document.getElementById('total-questions-count'), modalQuestionEditor: document.getElementById('modal-question-editor'), editorModalTitle: document.getElementById('editor-modal-title'), editQText: document.getElementById('edit-q-text'), editQPoints: document.getElementById('edit-q-points'), editOptionsList: document.getElementById('edit-options-list')
         };
 
-        // ... Utils & Navigation ...
         function shuffleArray(array) { let shuffled = [...array]; for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; } return shuffled; }
         function switchView(viewName) { gameState = viewName; Object.values(views).forEach(el => el.classList.add('hidden-view')); views[viewName].classList.remove('hidden-view'); }
 
-        // --- MAIN QUIZ LOGIC ---
         function startQuiz() {
             userName = els.inputNama.value.trim();
             userClass = els.inputKelas.value;
             if (!userName || !userClass) { els.inputError.textContent = "Harap isi Nama Lengkap dan Kelas."; els.inputError.classList.remove('hidden'); return; }
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
             els.inputError.classList.add('hidden');
-            
             const packages = ['A', 'B', 'C', 'D', 'E'];
             userPackage = packages[Math.floor(Math.random() * packages.length)];
-
-            initData(); // Reload and check count
+            initData();
             shuffledQuestions = shuffleArray(questionsData);
             currentQuestionIndex = 0;
             userAnswers = {};
             violationCount = 0;
             startTime = new Date();
-            isSubmitting = false; // Reset submit flag
-            els.btnFinish.disabled = false; // Re-enable button
-            
+            isSubmitting = false; 
+            els.btnFinish.disabled = false; 
             els.displayIdentity.textContent = `${userName} (${userClass}) - Paket ${userPackage}`;
             updateViolationDisplay();
             renderQuestion();
@@ -433,8 +421,8 @@
             activateAntiCheat();
         }
 
-        // ... renderQuestion, selectAnswer, next, prev (Same as before) ...
         function renderQuestion() {
+            if (!shuffledQuestions || shuffledQuestions.length === 0) return;
             const q = shuffledQuestions[currentQuestionIndex];
             els.questionCounter.textContent = `Soal ${currentQuestionIndex + 1} dari ${shuffledQuestions.length}`;
             const percent = Math.round(((currentQuestionIndex + 1) / shuffledQuestions.length) * 100);
@@ -466,26 +454,16 @@
         function nextQuestion() { if (currentQuestionIndex < shuffledQuestions.length - 1) { currentQuestionIndex++; renderQuestion(); } }
         function prevQuestion() { if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); } }
 
-        // --- FIXED: FINISH QUIZ (PREVENT DOUBLE SUBMIT) ---
         async function finishQuiz() {
-            // FIX: Check if already submitting
             if (isSubmitting) return;
             isSubmitting = true;
-            
-            // FIX: Disable button visually
             els.btnFinish.disabled = true;
             document.getElementById('btn-finish-text').textContent = "Memproses...";
-
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-
             const endTime = new Date();
             const durationMs = endTime - startTime;
             const durationStr = `${Math.floor(durationMs / 60000)}m ${Math.floor((durationMs % 60000) / 1000)}s`;
-
-            let earnedPoints = 0;
-            let totalPossiblePoints = 0;
-            let correctCount = 0;
-
+            let earnedPoints = 0; let totalPossiblePoints = 0; let correctCount = 0;
             shuffledQuestions.forEach((q, idx) => {
                 const points = q.points || 1;
                 totalPossiblePoints += points;
@@ -494,27 +472,11 @@
                     correctCount++;
                 }
             });
-
             let finalGrade = 0;
-            if (totalPossiblePoints > 0) {
-                finalGrade = Math.round((earnedPoints / totalPossiblePoints) * 100);
-            }
-            
+            if (totalPossiblePoints > 0) finalGrade = Math.round((earnedPoints / totalPossiblePoints) * 100);
             const isPassed = finalGrade >= 75;
-
-            // Render Results
-            els.resultName.textContent = userName;
-            els.resultClass.textContent = userClass;
-            els.resultPaket.textContent = `Soal Paket ${userPackage}`; 
-            els.resultDuration.textContent = durationStr;
-            els.resultScore.textContent = `${correctCount} / ${shuffledQuestions.length}`;
-            els.resultGrade.textContent = `Nilai Akhir: ${finalGrade}`;
-            els.resultGrade.className = `text-xl font-semibold ${isPassed ? 'text-green-600' : 'text-red-600'}`;
-            els.resultStatus.textContent = isPassed ? "Selamat! Anda Kompeten." : "Belum Kompeten. Silakan belajar lagi.";
-            els.resultIcon.innerHTML = isPassed ? '<i data-feather="check-circle" class="w-16 h-16 text-green-500"></i>' : '<i data-feather="x-circle" class="w-16 h-16 text-red-500"></i>';
+            els.resultName.textContent = userName; els.resultClass.textContent = userClass; els.resultPaket.textContent = `Soal Paket ${userPackage}`; els.resultDuration.textContent = durationStr; els.resultScore.textContent = `${correctCount} / ${shuffledQuestions.length}`; els.resultGrade.textContent = `Nilai Akhir: ${finalGrade}`; els.resultGrade.className = `text-xl font-semibold ${isPassed ? 'text-green-600' : 'text-red-600'}`; els.resultStatus.textContent = isPassed ? "Selamat! Anda Kompeten." : "Belum Kompeten. Silakan belajar lagi."; els.resultIcon.innerHTML = isPassed ? '<i data-feather="check-circle" class="w-16 h-16 text-green-500"></i>' : '<i data-feather="x-circle" class="w-16 h-16 text-red-500"></i>';
             feather.replace();
-
-            // Wrong Answers Review
             els.reviewContainer.innerHTML = '';
             let wrongCount = 0;
             shuffledQuestions.forEach((q, idx) => {
@@ -528,32 +490,19 @@
                 }
             });
             if(wrongCount===0) els.reviewContainer.innerHTML = '<p class="text-center text-gray-500 italic">Sempurna! Tidak ada jawaban salah.</p>';
-
             const resultData = { nama: userName, kelas: userClass, paket: userPackage, skor: correctCount, nilaiAkhir: finalGrade, durasi: durationStr, pelanggaran: violationCount, timestamp: new Date().toISOString() };
-            
-            // Send to Google Sheets
             if (GOOGLE_SCRIPT_URL) {
                 els.submissionStatus.classList.remove('hidden');
                 try {
-                    await fetch(GOOGLE_SCRIPT_URL, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(resultData)
-                    });
+                    await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(resultData) });
                 } catch(e) { console.error(e); }
                 els.submissionStatus.classList.add('hidden');
             }
-
-            // Restore button state (in case they want to review) - though view changes
             els.btnFinish.disabled = false;
             document.getElementById('btn-finish-text').textContent = "Selesai & Kumpulkan";
-            
             switchView('finished');
         }
 
-        // --- ADMIN, ANTI CHEAT, ETC (Same Logic) ---
-        // (Copied strictly from previous logic, just ensuring Anti Cheat is active)
         function activateAntiCheat() {
             document.addEventListener("visibilitychange", handleViolation);
             window.addEventListener("blur", handleViolation);
@@ -586,10 +535,8 @@
         
         async function disqualifyUser() {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-            // Check submit flag just in case
             if (isSubmitting) return;
             isSubmitting = true;
-
             const endTime = new Date();
             const durationMs = endTime - startTime;
             const durationStr = `${Math.floor(durationMs / 60000)}m ${Math.floor((durationMs % 60000) / 1000)}s`;
@@ -599,17 +546,14 @@
                 if (userAnswers[idx] === q.answer) { earnedPoints += (q.points || 1); correctCount++; }
             });
             let finalGrade = 0; if (totalPossiblePoints > 0) finalGrade = Math.round((earnedPoints / totalPossiblePoints) * 100);
-            
             const resultData = { nama: `${userName} (DISKUALIFIKASI)`, kelas: userClass, paket: userPackage, skor: correctCount, nilaiAkhir: finalGrade, durasi: durationStr, pelanggaran: violationCount, timestamp: new Date().toISOString() };
             if (GOOGLE_SCRIPT_URL) fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(resultData) });
-
             gameState = "disqualified";
             els.dqName.textContent = userName; els.dqClass.textContent = userClass; els.dqCount.textContent = violationCount;
             els.modalViolation.classList.add('hidden-view'); 
             switchView('disqualified');
         }
 
-        // Rest of Admin & Helper functions (same as before)
         function showAdminLogin() { els.modalAdminLogin.classList.remove('hidden-view'); els.adminPinInput.focus(); }
         function closeAdminLogin() { els.modalAdminLogin.classList.add('hidden-view'); els.adminError.classList.add('hidden'); els.adminPinInput.value = ''; }
         function handleAdminLogin(e) { e.preventDefault(); if (els.adminPinInput.value === ADMIN_PIN) { closeAdminLogin(); switchView('admin'); renderQuestionsEditor(); fetchAdminData(); } else { els.adminError.classList.remove('hidden'); } }
@@ -617,7 +561,6 @@
             if (tab === 'results') { els.adminContentResults.classList.remove('hidden-view'); els.adminContentQuestions.classList.add('hidden-view'); els.tabResults.classList.add('bg-blue-600', 'text-white', 'shadow-md'); els.tabResults.classList.remove('bg-white', 'text-gray-600', 'border'); els.tabQuestions.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); els.tabQuestions.classList.add('bg-white', 'text-gray-600', 'border'); }
             else { els.adminContentResults.classList.add('hidden-view'); els.adminContentQuestions.classList.remove('hidden-view'); els.tabQuestions.classList.add('bg-blue-600', 'text-white', 'shadow-md'); els.tabQuestions.classList.remove('bg-white', 'text-gray-600', 'border'); els.tabResults.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); els.tabResults.classList.add('bg-white', 'text-gray-600', 'border'); }
         }
-        // Fetch Admin Data
         async function fetchAdminData() {
             if (!GOOGLE_SCRIPT_URL) { alert("URL Google Script belum dikonfigurasi."); return; }
             els.loadingIndicator.classList.remove('hidden'); els.adminTableBody.innerHTML = '';
@@ -636,7 +579,6 @@
             } catch (error) { els.adminTableBody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-red-500">Gagal mengambil data.<br>Error: ${error.message}</td></tr>`; } finally { els.loadingIndicator.classList.add('hidden'); }
         }
         function downloadCSV() { alert("Gunakan data di Dashboard untuk verifikasi."); }
-        // Question Editor (Same as before)
         function renderQuestionsEditor() {
             els.totalQuestionsCount.textContent = questionsData.length; els.questionsListContainer.innerHTML = '';
             questionsData.forEach((q, idx) => {
@@ -661,6 +603,7 @@
             saveQuestionsToLS(); renderQuestionsEditor(); closeQuestionModal();
         }
         function editQuestion(index) { openQuestionModal(index); }
+        function resetApp() { els.inputNama.value = ''; els.inputKelas.value = ''; els.adminPinInput.value = ''; els.aiContent.classList.add('hidden'); els.aiContent.textContent = ''; els.btnAi.disabled = false; els.btnAi.textContent = "Jelaskan Kenapa Saya Salah?"; gameState = "welcome"; switchView('welcome'); }
         async function askAi() { if (!API_KEY) { alert("API Key belum dikonfigurasi."); return; } els.btnAi.disabled = true; els.btnAi.innerHTML = `Memproses...`; const wrongQs = shuffledQuestions.filter((q, idx) => userAnswers[idx] !== q.answer).slice(0, 3); const details = wrongQs.map(q => `- Soal: "${q.question}" (Jawab: ${q.options[userAnswers[q.id-1]] || '-'}, Kunci: ${q.options[q.answer]})`).join("\n"); const prompt = `Jelaskan jawaban yang benar singkat saja: ${details}`; try { const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }); const data = await res.json(); els.aiContent.textContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI sibuk."; els.aiContent.classList.remove('hidden'); els.btnAi.textContent = "Selesai"; } catch (error) { alert("Gagal."); els.btnAi.disabled = false; } }
     </script>
 </body>
